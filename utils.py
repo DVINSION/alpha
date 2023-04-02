@@ -44,7 +44,7 @@ def sign(df: pd.DataFrame):
     return np.sign(df)
 
 
-def cs_rank(df: pd.DataFrame):
+def cs_rank(df: pd.DataFrame) -> pd.DataFrame:
     """
     cross-sectional rank
 
@@ -110,14 +110,34 @@ def ts_cov(df_x: pd.DataFrame, df_y: pd.DataFrame, window: int):
     return df_x.rolling(window).cov(df_y).replace([np.inf, -np.inf], np.nan)
 
 
-def scale(df: pd.DataFrame, ):
-    # todo
-    pass
+def scale(df: pd.DataFrame, k: int):
+    """
+
+    Parameters
+    ----------
+    df
+    k
+
+    Returns
+    -------
+
+    """
+    return df.mul(k).div(np.abs(df).sum())
 
 
-def delta(df: pd.DataFrame, window: int):
-    # todo
-    pass
+def ts_delta(df: pd.DataFrame, window: int):
+    """
+
+    Parameters
+    ----------
+    df
+    window
+
+    Returns
+    -------
+
+    """
+    return df.diff(window)
 
 
 def ts_decay_linear(df: pd.DataFrame, window: int):

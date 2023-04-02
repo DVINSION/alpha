@@ -732,45 +732,73 @@ class Alphas101(Alphas):
     # Alpha#80	 ((rank(Sign(delta(IndNeutralize(((open * 0.868128) + (high * (1 - 0.868128))),IndClass.industry), 4.04545)))^Ts_Rank(correlation(high, adv10, 5.11456), 5.53756)) * -1)
 
     # # Alpha#81	 ((rank(Log(product(rank((rank(correlation(vwap, sum(adv10, 49.6054),8.47743))^4)), 14.9655))) < rank(correlation(rank(vwap), rank(volume), 5.07914))) * -1)
-    # def alpha081(self):
-    #     adv10 = sma(self.volume, 10)
-    #     return ((rank(log(product(rank((rank(correlation(self.vwap, ts_sum(adv10, 50), 8)).pow(4))), 15))) < rank(
-    #         correlation(rank(self.vwap), rank(self.volume), 5))) * -1)
+    @staticmethod
+    def alpha081(underlying):
+        volume = underlying.data["volume"].copy()
+        vwap = underlying.data["vwap"].copy()
+        adv10 = ts_mean(volume, 10)
+        return ((cs_rank(log(ts_product(cs_rank(cs_rank(ts_corr(vwap, ts_sum(adv10, 50), 8)).pow(4)), 15))) < cs_rank(
+            ts_corr(cs_rank(vwap), cs_rank(volume), 5))) * -1)
     #
     # # Alpha#82	 (min(rank(decay_linear(delta(open, 1.46063), 14.8717)),Ts_Rank(decay_linear(correlation(IndNeutralize(volume, IndClass.sector), ((open * 0.634196) +(open * (1 - 0.634196))), 17.4842), 6.92131), 13.4283)) * -1)
     #
     # # Alpha#83	 ((rank(delay(((high - low) / (sum(close, 5) / 5)), 2)) * rank(rank(volume))) / (((high -low) / (sum(close, 5) / 5)) / (vwap - close)))
-    # def alpha083(self):
-    #     return ((rank(delay(((self.high - self.low) / (ts_sum(self.close, 5) / 5)), 2)) * rank(
-    #         rank(self.volume))) / (
-    #                         ((self.high - self.low) / (ts_sum(self.close, 5) / 5)) / (self.vwap - self.close)))
+    @staticmethod
+    def alpha083(underlying):
+        low = underlying.data["low"].copy()
+        high = underlying.data["high"].copy()
+        close = underlying.data["close"].copy()
+        volume = underlying.data["volume"].copy()
+        vwap = underlying.data["vwap"].copy()
+        return ((cs_rank(ts_delay(((high - low) / (ts_sum(close, 5) / 5)), 2)) * cs_rank(
+            cs_rank(volume))) / (
+                            ((high - low) / (ts_sum(close, 5) / 5)) / (vwap - close)))
     #
     # # Alpha#84	 SignedPower(Ts_Rank((vwap - ts_max(vwap, 15.3217)), 20.7127), delta(close,4.96796))
-    # def alpha084(self):
-    #     return pow(ts_rank((self.vwap - ts_max(self.vwap, 15)), 21), delta(self.close, 5))
+    @staticmethod
+    def alpha084(underlying):
+        close = underlying.data["close"].copy()
+        vwap = underlying.data["vwap"].copy()
+        inner = ts_rank((vwap - ts_max(vwap, 15)), 21)
+        return  abs(inner).pow(ts_delta(close, 5)) * sign(inner)
     #
     # # Alpha#85	 (rank(correlation(((high * 0.876703) + (close * (1 - 0.876703))), adv30,9.61331))^rank(correlation(Ts_Rank(((high + low) / 2), 3.70596), Ts_Rank(volume, 10.1595),7.11408)))
-    # def alpha085(self):
-    #     adv30 = sma(self.volume, 30)
-    #     return (rank(correlation(((self.high * 0.876703) + (self.close * (1 - 0.876703))), adv30, 10)).pow(
-    #         rank(correlation(ts_rank(((self.high + self.low) / 2), 4), ts_rank(self.volume, 10), 7))))
+    @staticmethod
+    def alpha085(underlying):
+        volume = underlying.data["volume"].copy()
+        low = underlying.data["low"].copy()
+        high = underlying.data["high"].copy()
+        close = underlying.data["close"].copy()
+        adv30 = ts_mean(volume, 30)
+        return (cs_rank(ts_corr(((high * 0.876703) + (close * (1 - 0.876703))), adv30, 10)).pow(
+            cs_rank(ts_corr(ts_rank(((high + low) / 2), 4), ts_rank(volume, 10), 7))))
     #
     # # Alpha#86	 ((Ts_Rank(correlation(close, sum(adv20, 14.7444), 6.00049), 20.4195) < rank(((open+ close) - (vwap + open)))) * -1)
-    # def alpha086(self):
-    #     adv20 = sma(self.volume, 20)
-    #     # 后者乘以20，使比较双方处于同一水平
-    #     return ((ts_rank(correlation(self.close, sma(adv20, 15), 6), 20) < rank(
-    #         ((self.open + self.close) - (self.vwap + self.open))) * 20) * -1)
+    @staticmethod
+    def alpha086(underlying):
+        open = underlying.data["open"].copy()
+        volume = underlying.data["volume"].copy()
+        close = underlying.data["close"].copy()
+        vwap = underlying.data["vwap"].copy()
+        adv20 = ts_mean(volume, 20)
+        # 后者乘以20，使比较双方处于同一水平
+        return ((ts_rank(ts_corr(close, ts_mean(adv20, 15), 6), 20) < cs_rank(
+            ((open + close) - (vwap + open))) * 20) * -1)
     #
     # # Alpha#87	 (max(rank(decay_linear(delta(((close * 0.369701) + (vwap * (1 - 0.369701))),1.91233), 2.65461)), Ts_Rank(decay_linear(abs(correlation(IndNeutralize(adv81,IndClass.industry), close, 13.4132)), 4.89768), 14.4535)) * -1)
     #
     # # Alpha#88	 min(rank(decay_linear(((rank(open) + rank(low)) - (rank(high) + rank(close))),8.06882)), Ts_Rank(decay_linear(correlation(Ts_Rank(close, 8.44728), Ts_Rank(adv60,20.6966), 8.01266), 6.65053), 2.61957))
-    # def alpha088(self):
-    #     adv60 = sma(self.volume, 60)
-    #     p1 = rank(decay_linear(((rank(self.open) + rank(self.low)) - (rank(self.high) + rank(self.close))), 8))
-    #     p2 = ts_rank(decay_linear(correlation(ts_rank(self.close, 8), ts_rank(adv60, 21), 8), 7), 3)
-    #     return min(p1, p2)
-    #     # return min(rank(decay_linear(((rank(self.open) + rank(self.low)) - (rank(self.high) + rank(self.close))).to_frame(),8).CLOSE), ts_rank(decay_linear(correlation(ts_rank(self.close, 8), ts_rank(adv60,20.6966), 8).to_frame(), 7).CLOSE, 3))
+    @staticmethod
+    def alpha088(underlying):
+        open = underlying.data["open"].copy()
+        volume = underlying.data["volume"].copy()
+        close = underlying.data["close"].copy()
+        low = underlying.data["low"].copy()
+        high = underlying.data["high"].copy()
+        adv60 = ts_mean(volume, 60)
+        p1 = cs_rank(ts_decay_linear(((cs_rank(open) + cs_rank(low)) - (cs_rank(high) + cs_rank(close))), 8))
+        p2 = ts_rank(ts_decay_linear(ts_corr(ts_rank(close, 8), ts_rank(adv60, 21), 8), 7), 3)
+        return min(p1, p2)
     #
     # # Alpha#89	 (Ts_Rank(decay_linear(correlation(((low * 0.967285) + (low * (1 - 0.967285))), adv10,6.94279), 5.51607), 3.79744) - Ts_Rank(decay_linear(delta(IndNeutralize(vwap,IndClass.industry), 3.48158), 10.1466), 15.3012))
     #
@@ -779,60 +807,86 @@ class Alphas101(Alphas):
     # # Alpha#91	 ((Ts_Rank(decay_linear(decay_linear(correlation(IndNeutralize(close,IndClass.industry), volume, 9.74928), 16.398), 3.83219), 4.8667) -rank(decay_linear(correlation(vwap, adv30, 4.01303), 2.6809))) * -1)
     #
     # # Alpha#92	 min(Ts_Rank(decay_linear(((((high + low) / 2) + close) < (low + open)), 14.7221),18.8683), Ts_Rank(decay_linear(correlation(rank(low), rank(adv30), 7.58555), 6.94024),6.80584))
-    # def alpha092(self):
-    #     adv30 = sma(self.volume, 30)
-    #     p1 = ts_rank(decay_linear(((((self.high + self.low) / 2) + self.close) < (self.low + self.open)), 15), 19)
-    #     p2 = ts_rank(decay_linear(correlation(rank(self.low), rank(adv30), 8), 7), 7)
-    #     return min(p1, p2)
-    #     # return  min(ts_rank(decay_linear(((((self.high + self.low) / 2) + self.close) < (self.low + self.open)).to_frame(), 15).CLOSE,19), ts_rank(decay_linear(correlation(rank(self.low), rank(adv30), 8).to_frame(), 7).CLOSE,7))
+    @staticmethod
+    def alpha092(underlying):
+        open = underlying.data["open"].copy()
+        volume = underlying.data["volume"].copy()
+        close = underlying.data["close"].copy()
+        low = underlying.data["low"].copy()
+        high = underlying.data["high"].copy()
+        adv30 = ts_mean(volume, 30)
+        p1 = ts_rank(ts_decay_linear(((((high + low) / 2) + close) < (low + open)), 15), 19)
+        p2 = ts_rank(ts_decay_linear(ts_corr(cs_rank(low), cs_rank(adv30), 8), 7), 7)
+        return min(p1, p2)
     #
     # # Alpha#93	 (Ts_Rank(decay_linear(correlation(IndNeutralize(vwap, IndClass.industry), adv81,17.4193), 19.848), 7.54455) / rank(decay_linear(delta(((close * 0.524434) + (vwap * (1 -0.524434))), 2.77377), 16.2664)))
     #
     # # Alpha#94	 ((rank((vwap - ts_min(vwap, 11.5783)))^Ts_Rank(correlation(Ts_Rank(vwap,19.6462), Ts_Rank(adv60, 4.02992), 18.0926), 2.70756)) * -1)
-    # def alpha094(self):
-    #     adv60 = sma(self.volume, 60)
-    #     return ((rank((self.vwap - ts_min(self.vwap, 12))).pow(
-    #         ts_rank(correlation(ts_rank(self.vwap, 20), ts_rank(adv60, 4), 18), 3)) * -1))
-    #
-    # # Alpha#95	 (rank((open - ts_min(open, 12.4105))) < Ts_Rank((rank(correlation(sum(((high + low)/ 2), 19.1351), sum(adv40, 19.1351), 12.8742))^5), 11.7584))
-    # def alpha095(self):
-    #     adv40 = sma(self.volume, 40)
-    #     # 前者乘以12，使比较双方处于同一水平
-    #     return (rank((self.open - ts_min(self.open, 12))) * 12 < ts_rank(
-    #         (rank(correlation(sma(((self.high + self.low) / 2), 19), sma(adv40, 19), 13)).pow(5)), 12)).astype(
-    #         'int')
+    @staticmethod
+    def alpha094(underlying):
+        vwap = underlying.data["vwap"].copy()
+        volume = underlying.data["volume"].copy()
+        adv60 = ts_mean(volume, 60)
+        return ((cs_rank((vwap - ts_min(vwap, 12))).pow(
+            ts_rank(ts_corr(ts_rank(vwap, 20), ts_rank(adv60, 4), 18), 3)) * -1))
+    
+    # Alpha#95	 (rank((open - ts_min(open, 12.4105))) < Ts_Rank((rank(correlation(sum(((high + low)/ 2), 19.1351), sum(adv40, 19.1351), 12.8742))^5), 11.7584))
+    @staticmethod
+    def alpha095(underlying):
+        open = underlying.data["open"].copy()
+        volume = underlying.data["volume"].copy()
+        low = underlying.data["low"].copy()
+        high = underlying.data["high"].copy()
+        adv40 = ts_mean(volume, 40)
+        # 前者乘以12，使比较双方处于同一水平
+        return (cs_rank((open - ts_min(open, 12))) * 12 < ts_rank(
+            (cs_rank(ts_corr(ts_mean(((high + low) / 2), 19), ts_mean(adv40, 19), 13)).pow(5)), 12)).astype(
+            'int')
     #
     # # Alpha#96	 (max(Ts_Rank(decay_linear(correlation(rank(vwap), rank(volume), 3.83878),4.16783), 8.38151), Ts_Rank(decay_linear(Ts_ArgMax(correlation(Ts_Rank(close, 7.45404),Ts_Rank(adv60, 4.13242), 3.65459), 12.6556), 14.0365), 13.4143)) * -1)
-    # def alpha096(self):
-    #     adv60 = sma(self.volume, 60)
-    #     p1 = ts_rank(decay_linear(correlation(rank(self.vwap), rank(self.volume), 4), 4), 8)
-    #     p2 = ts_rank(decay_linear(ts_argmax(correlation(ts_rank(self.close, 7), ts_rank(adv60, 4), 4), 13), 14), 13)
-    #     r1 = rank(self.vwap)
-    #     r2 = rank(self.volume)
-    #     print(correlation(rank(self.vwap), rank(self.volume), 4))
-    #     return -1 * max(p1, p2)
-    #     # return (max(ts_rank(decay_linear(correlation(rank(self.vwap), rank(self.volume).to_frame(), 4),4).CLOSE, 8), ts_rank(decay_linear(ts_argmax(correlation(ts_rank(self.close, 7),ts_rank(adv60, 4), 4), 13).to_frame(), 14).CLOSE, 13)) * -1)
+    @staticmethod
+    def alpha096(underlying):
+        vwap = underlying.data["vwap"].copy()
+        close = underlying.data["close"].copy()
+        volume = underlying.data["volume"].copy()
+        adv60 = ts_mean(volume, 60)
+        p1 = ts_rank(ts_decay_linear(ts_corr(cs_rank(vwap), cs_rank(volume), 4), 4), 8)
+        p2 = ts_rank(ts_decay_linear(ts_argmax(ts_corr(ts_rank(close, 7), ts_rank(adv60, 4), 4), 13), 14), 13)
+        return -1 * max(p1, p2)
+
     #
     # # Alpha#97	 ((rank(decay_linear(delta(IndNeutralize(((low * 0.721001) + (vwap * (1 - 0.721001))),IndClass.industry), 3.3705), 20.4523)) - Ts_Rank(decay_linear(Ts_Rank(correlation(Ts_Rank(low,7.87871), Ts_Rank(adv60, 17.255), 4.97547), 18.5925), 15.7152), 6.71659)) * -1)
     #
     # # Alpha#98	 (rank(decay_linear(correlation(vwap, sum(adv5, 26.4719), 4.58418), 7.18088)) -rank(decay_linear(Ts_Rank(Ts_ArgMin(correlation(rank(open), rank(adv15), 20.8187), 8.62571),6.95668), 8.07206)))
-    # def alpha098(self):
-    #     adv5 = sma(self.volume, 5)
-    #     adv15 = sma(self.volume, 15)
-    #     return (rank(decay_linear(correlation(self.vwap, sma(adv5, 26), 5), 7)) - rank(
-    #         decay_linear(ts_rank(ts_argmin(correlation(rank(self.open), rank(adv15), 21), 9), 7), 8)))
+    @staticmethod
+    def alpha098(underlying):
+        vwap = underlying.data["vwap"].copy()
+        volume = underlying.data["volume"].copy()
+        adv5 = ts_mean(volume, 5)
+        adv15 = ts_mean(volume, 15)
+        return (cs_rank(ts_decay_linear(ts_corr(vwap, ts_mean(adv5, 26), 5), 7)) - cs_rank(
+            ts_decay_linear(ts_rank(ts_argmin(ts_corr(cs_rank(open), cs_rank(adv15), 21), 9), 7), 8)))
     #
     # # Alpha#99	 ((rank(correlation(sum(((high + low) / 2), 19.8975), sum(adv60, 19.8975), 8.8136)) <rank(correlation(low, volume, 6.28259))) * -1)
-    # def alpha099(self):
-    #     adv60 = sma(self.volume, 60)
-    #     return ((rank(correlation(ts_sum(((self.high + self.low) / 2), 20), ts_sum(adv60, 20), 9)) < rank(
-    #         correlation(self.low, self.volume, 6))) * -1)
+    @staticmethod
+    def alpha099(underlying):
+        low = underlying.data["low"].copy()
+        high = underlying.data["high"].copy()
+        volume = underlying.data["volume"].copy()
+        adv60 = ts_mean(volume, 60)
+        return ((cs_rank(ts_corr(ts_sum(((high + low) / 2), 20), ts_sum(adv60, 20), 9)) < cs_rank(
+            ts_corr(low, volume, 6))) * -1)
     #
     # # Alpha#100	 (0 - (1 * (((1.5 * scale(indneutralize(indneutralize(rank(((((close - low) - (high -close)) / (high - low)) * volume)), IndClass.subindustry), IndClass.subindustry))) -scale(indneutralize((correlation(close, rank(adv20), 5) - rank(ts_argmin(close, 30))),IndClass.subindustry))) * (volume / adv20))))
     #
     # # Alpha#101	 ((close - open) / ((high - low) + .001))
-    # def alpha101(self):
-    #     return (self.close - self.open) / ((self.high - self.low) + 0.001)
+    @staticmethod
+    def alpha0101(underlying):
+        close = underlying.data["close"].copy()
+        open = underlying.data["open"].copy()
+        low = underlying.data["low"].copy()
+        high = underlying.data["high"].copy()
+        return (close - open) / ((high - low) + 0.001)
 
 
 if __name__ == "__main__":
